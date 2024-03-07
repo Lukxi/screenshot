@@ -6,6 +6,7 @@ const URL = 'http://192.168.2.148:3000/d/ht6vknSSz1/pv-anlage-public?orgId=2&ref
 const VIEWPORT_WIDTH = 600;
 const VIEWPORT_HEIGHT = 800;
 const DEVICE_SCALE_FACTOR = 2;
+const CHUNK_HEIGHT = 6000;
 
 
 const getHeight = async (page) => {
@@ -32,6 +33,7 @@ async function autoScroll(page) {
           }
         }, 50);
       });
+      // Scroll back to the top of the page, so sticky menus appears at the right place.
       document.body.scrollTop = document.documentElement.scrollTop = 0;
     });
   } catch (err) {
