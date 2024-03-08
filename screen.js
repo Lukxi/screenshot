@@ -79,7 +79,7 @@ const screenshot = async () => {
   await browser.close();
   sharp(name)
   .rotate(90)
-  .toFile('out.jpg', (err, info) => {
+  .toFile('out.png', (err, info) => {
       if (err) {
           console.error(err);
       } else {
