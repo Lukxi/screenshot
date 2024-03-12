@@ -1,6 +1,8 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const sharp = require('sharp');
+const http = require('http');
+const path = require('path');
 
 // Puppeteer configuration options
 const URL = 'http://192.168.2.148:3000/d/ht6vknSSz1/pv-anlage-public?from=now%2Fd&orgId=2&refresh=1m&theme=light&to=now%2Fd';
@@ -8,14 +10,12 @@ const VIEWPORT_WIDTH = 1024;
 const VIEWPORT_HEIGHT = 758;
 const DEVICE_SCALE_FACTOR = 1;
 
-
 const getHeight = async (page) => {
   const height = await page.evaluate(() => {
     return document.body.scrollHeight;
   });
   return height;
 };
-
 
 async function autoScroll(page) {
   try {
@@ -69,25 +69,68 @@ const screenshot = async () => {
 
   await page.waitForNetworkIdle();
 
+  try {
     let name = `./Image_${Date.now()}.png`;
     await page.screenshot({
       path: name,
       fullPage: true,
     });
-  //}
+
+    // Rotate and overwrite the original image
+    await sharp(name)
+      .rotate(90)
+      .toFile('out.png');
+
+    // Delete the original image
+    fs.unlink(name, (err) => {
+      if (err) {
+        console.error(`Error deleting ${name}: ${err}`);
+      } else {
+        console.log(`Original image ${name} deleted`);
+      }
+    });
+
+    console.log('Image Taken, Rotated, and Original Deleted: out.png');
+  } catch (error) {
+    console.error('Error taking and processing screenshot:', error);
+  }
 
   await browser.close();
-  sharp(name)
-  .rotate(90)
-  .toFile('out.png', (err, info) => {
-      if (err) {
-          console.error(err);
-      } else {
-          console.log('Image Taken and rotated: ' + name);
-      }
-  });
 };
-setInterval(screenshot, 60000); // Take screenshot every minute (60000 milliseconds)
 
+const PORT = 3000;
+
+const server = http.createServer((req, res) => {
+    const filePath = path.join(__dirname, 'out.png');
+
+    // Check if the file exists
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err) {
+            res.statusCode = 404;
+            res.end('File not found');
+            return;
+        }
+
+        // Serve the file
+        fs.readFile(filePath, (err, data) => {
+            if (err) {
+                res.statusCode = 500;
+                res.end('Internal server error');
+                return;
+            }
+
+            res.setHeader('Content-Type', 'image/png');
+            res.end(data);
+        });
+    });
+});
+
+server.listen(PORT, () => {
+    console.log(`Server is running at http://localhost:${PORT}/`);
+});
+
+// Initial Screen
 screenshot();
 
+// Schedule screenshots every minute
+setInterval(screenshot, 60000);
