@@ -51,7 +51,7 @@ const screenshot = async () => {
   });
 
   await page.goto(URL);
-  
+
   await page.addStyleTag({content: `
   nav {
     display: none !important;
@@ -60,7 +60,11 @@ const screenshot = async () => {
     display: none !important;
   }
   [data-panelid="20"] {
+    top: 27px !important;
     margin-top: 8px !important;
+  }
+  h2{
+    font-size: 1.29rem !important;
   }
 `});
 
@@ -79,6 +83,11 @@ const screenshot = async () => {
     // Rotate and overwrite the original image
     await sharp(name)
       .rotate(90)
+//      .pipelineColourspace('grey16')
+      .toColourspace('b-w')
+//      .toColourspace('grey16')
+//      .png({ quality: 100, force: true, bitdepth: 8})
+      .removeAlpha()
       .toFile('out.png');
 
     // Delete the original image
